@@ -57,6 +57,26 @@ class Config:
         self.poll_interval = interval_seconds
         self.seen_file = "/data/seen_ids.json" if os.path.isdir("/data") else "seen_ids.json"
 
+        # Opciones para Notifiers (Decoradores)
+        self.use_retry = os.environ.get("NOTIFIER_USE_RETRY", "true").lower() == "true"
+        self.use_sanitizing = os.environ.get("NOTIFIER_USE_SANITIZING", "true").lower() == "true"
+        self.use_logging = os.environ.get("NOTIFIER_USE_LOGGING", "true").lower() == "true"
+        
+        try:
+            self.retry_max_attempts = int(os.environ.get("NOTIFIER_RETRY_ATTEMPTS", "3"))
+        except ValueError:
+            self.retry_max_attempts = 3
+            
+        try:
+            self.retry_delay = int(os.environ.get("NOTIFIER_RETRY_DELAY", "5"))
+        except ValueError:
+            self.retry_delay = 5
+            
+        try:
+            self.sanitizing_max_length = int(os.environ.get("NOTIFIER_SANITIZING_MAX_LENGTH", "4000"))
+        except ValueError:
+            self.sanitizing_max_length = 4000
+
     @classmethod
     def from_env(cls) -> "Config":
         """Instancia la configuracion realizando validacion basica del entorno.

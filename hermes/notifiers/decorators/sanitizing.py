@@ -1,0 +1,35 @@
+from hermes.core.source import Message
+from hermes.notifiers.decorators.base import NotifierDecorator
+
+class SanitizingNotifierDecorator(NotifierDecorator):
+    """Decorator that sanitizes message content before sending."""
+
+    def __init__(self, inner_notifier, max_length: int = 4000):
+        super().__init__(inner_notifier)
+        self.max_length = max_length
+
+    def _sanitize_string(self, text: str) -> str:
+        if not text:
+            return ""
+        # Remove null bytes
+        text = text.replace('\x00', '')
+        # Truncate
+        if len(text) > self.max_length:
+            text = text[:self.max_length] + "..."
+        return text.strip()
+
+    def send(self, keyword: str, message: Message) -> None:
+        """Sanitizes message fields before sending."""
+        sanitized_msg = Message(
+            id=message.id,
+            thread_id=message.thread_id,
+            subject=self._sanitize_string(message.subject),
+            sender=self._sanitize_string(message.sender),
+            snippet=self._sanitize_string(message.snippet),
+            date=message.date,
+            url=message.url
+        )
+        self._wrapped.send(keyword, sanitized_msg)
+
+    def notify_text(self, text: str) -> None:
+        self._wrapped.notify_text(self._sanitize_string(text))
