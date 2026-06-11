@@ -33,7 +33,7 @@ class TelegramNotifier(Notifier):
         # Para Markdown basico o texto plano HTML, removemos o escapamos los basicos.
         # En este caso, usaremos el modo por defecto de texto de Telegram (sin parse_mode)
         # pero eliminamos caracteres que podrian alterar la visualizacion.
-        return text.replace("<", "&lt;").replace(">", "&gt;").replace("&", "&amp;")
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
     def _post_with_retry(self, text: str) -> None:
         """Realiza una llamada POST a la API de Telegram con logica de reintentos y timeouts.
