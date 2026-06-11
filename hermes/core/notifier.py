@@ -15,6 +15,16 @@ class Notifier(ABC):
         pass
 
     @abstractmethod
+    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
+        """Envia una notificacion agrupada para mensajes que coinciden de forma difusa.
+
+        Args:
+            keyword (str): Palabra clave que origino la alerta.
+            messages (list[Message]): Lista de mensajes similares detectados.
+        """
+        pass
+
+    @abstractmethod
     def notify_text(self, text: str) -> None:
         """Envia un mensaje de texto directo al canal de notificacion.
 

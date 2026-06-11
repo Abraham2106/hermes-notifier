@@ -17,6 +17,17 @@ class LoggingNotifierDecorator(NotifierDecorator):
             logger.error(f"[{self._wrapped.__class__.__name__}] Failed to send message '{message.id}': {e}", exc_info=True)
             raise
 
+    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
+        start_time = time.time()
+        logger.debug(f"[{self._wrapped.__class__.__name__}] Sending batch of {len(messages)} similar messages for keyword '{keyword}'")
+        try:
+            self._wrapped.send_similar_batch(keyword, messages)
+            elapsed = (time.time() - start_time) * 1000
+            logger.info(f"[{self._wrapped.__class__.__name__}] Successfully sent similar batch in {elapsed:.2f}ms")
+        except Exception as e:
+            logger.error(f"[{self._wrapped.__class__.__name__}] Failed to send similar batch: {e}", exc_info=True)
+            raise
+
     def notify_text(self, text: str) -> None:
         logger.debug(f"[{self._wrapped.__class__.__name__}] Sending text notification: '{text[:50]}...'")
         try:

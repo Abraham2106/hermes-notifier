@@ -29,6 +29,23 @@ class RetryNotifierDecorator(NotifierDecorator):
         logger.error(f"Notificacion descartada permanentemente tras {self._max_attempts} intentos: {last_error}")
         raise last_error
 
+    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
+        last_error = None
+        for attempt in range(1, self._max_attempts + 1):
+            try:
+                self._wrapped.send_similar_batch(keyword, messages)
+                return
+            except Exception as e:
+                last_error = e
+                logger.warning(
+                    f"Intento {attempt}/{self._max_attempts} fallido al enviar lote similar con '{keyword}': {e}"
+                )
+                if attempt < self._max_attempts:
+                    time.sleep(self._base_delay * (2 ** (attempt - 1)))
+        
+        logger.error(f"Lote similar descartado permanentemente tras {self._max_attempts} intentos: {last_error}")
+        raise last_error
+
     def notify_text(self, text: str) -> None:
         last_error = None
         for attempt in range(1, self._max_attempts + 1):

@@ -24,22 +24,19 @@ class KeywordFilter(Filter):
         """
         return self._key
 
-    def matches(self, message: Message) -> bool:
-        """Valida si el mensaje contiene la palabra clave.
+    def matches(self, message: Message) -> str:
+        """Valida si el mensaje contiene la palabra clave y el nivel de coincidencia.
 
-        La busqueda no distingue entre mayusculas y minusculas.
+        La busqueda usa coincidencias exactas o difusas (fuzzy matching).
 
         Args:
             message (Message): Mensaje a analizar.
 
         Returns:
-            bool: True si coincide, False en caso contrario.
+            str: "EXACT", "SIMILAR" o "NONE".
         """
-        key_lower = self._key.lower()
+        from hermes.utils.matching import categorize_match
         
-        # Realizar busquedas insensibles a mayusculas.
-        in_subject = key_lower in message.subject.lower()
-        in_sender = key_lower in message.sender.lower()
-        in_body = key_lower in message.body.lower()
-        
-        return in_subject or in_sender or in_body
+        # Unir todos los campos en un solo texto para el escaneo
+        full_text = f"{message.subject} {message.sender} {message.body}"
+        return categorize_match(self._key, full_text)

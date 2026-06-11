@@ -16,5 +16,8 @@ class NotifierDecorator(Notifier, ABC):
     def send(self, keyword: str, message: Message) -> None:
         self._wrapped.send(keyword, message)
 
+    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
+        self._wrapped.send_similar_batch(keyword, messages)
+
     def notify_text(self, text: str) -> None:
         self._wrapped.notify_text(text)

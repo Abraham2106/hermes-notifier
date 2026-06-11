@@ -110,15 +110,32 @@ class Monitor:
             if kw not in seen:
                 seen[kw] = set()
 
+            similar_batch = []
+            
             # Obtener nuevos mensajes desde la fuente.
             for msg in self._source.fetch(query=kw, max_results=10):
                 if msg.id not in seen[kw]:
-                    # Verificar si coincide y notificar.
-                    if f.matches(msg):
+                    match_type = f.matches(msg)
+                    
+                    if match_type == "EXACT":
+                        # Enviar notificacion individual
                         for notifier in self._notifiers:
                             try:
                                 notifier.send(keyword=kw, message=msg)
                             except Exception as e:
-                                logger.error(f"Error al enviar notificacion de coincidencia: {e}")
+                                logger.error(f"Error al enviar notificacion exacta: {e}")
                         seen[kw].add(msg.id)
+                        
+                    elif match_type == "SIMILAR":
+                        # Acumular para batching
+                        similar_batch.append(msg)
+                        seen[kw].add(msg.id)
+
+            # Si hay mensajes similares, enviar el lote
+            if similar_batch:
+                for notifier in self._notifiers:
+                    try:
+                        notifier.send_similar_batch(keyword=kw, messages=similar_batch)
+                    except Exception as e:
+                        logger.error(f"Error al enviar lote de similares: {e}")
 

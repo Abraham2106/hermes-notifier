@@ -15,13 +15,13 @@ class Filter(ABC):
         pass
 
     @abstractmethod
-    def matches(self, message: Message) -> bool:
-        """Determina si un mensaje cumple con los criterios del filtro.
+    def matches(self, message: Message) -> str:
+        """Determina si un mensaje cumple con los criterios del filtro y su tipo.
 
         Args:
             message (Message): Mensaje a evaluar.
 
         Returns:
-            bool: True si el mensaje coincide, False de lo contrario.
+            str: "EXACT", "SIMILAR" o "NONE".
         """
         pass

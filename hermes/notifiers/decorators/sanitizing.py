@@ -28,5 +28,16 @@ class SanitizingNotifierDecorator(NotifierDecorator):
         )
         self._wrapped.send(keyword, sanitized_msg)
 
+    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
+        sanitized_msgs = []
+        for msg in messages:
+            sanitized_msgs.append(Message(
+                id=msg.id,
+                sender=self._sanitize_string(msg.sender),
+                subject=self._sanitize_string(msg.subject),
+                body=self._sanitize_string(msg.body)
+            ))
+        self._wrapped.send_similar_batch(keyword, sanitized_msgs)
+
     def notify_text(self, text: str) -> None:
         self._wrapped.notify_text(self._sanitize_string(text))

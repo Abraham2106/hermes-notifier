@@ -97,6 +97,33 @@ class TelegramNotifier(Notifier):
         self._post_with_retry(text)
         logger.info(f"Telegram enviado para keyword '{keyword}': {message.subject[:40]}")
 
+    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
+        """Envia un mensaje agrupado con coincidencias similares a Telegram.
+
+        Args:
+            keyword (str): Palabra clave buscada.
+            messages (list[Message]): Lista de mensajes similares detectados.
+        """
+        if not messages:
+            return
+            
+        clean_keyword = self._sanitize_markdown(keyword)
+        
+        text_lines = [
+            f"<b>[SIMILARES DETECTADOS]</b>",
+            f"<b>Keyword Original:</b> {clean_keyword}",
+            ""
+        ]
+        
+        for msg in messages:
+            clean_sender = self._sanitize_markdown(msg.sender)
+            clean_subject = self._sanitize_markdown(msg.subject)
+            text_lines.append(f"• De: {clean_sender} | Asunto: {clean_subject}")
+            
+        text = "\n".join(text_lines)
+        self._post_with_retry(text)
+        logger.info(f"Telegram enviado lote de {len(messages)} mensajes similares para keyword '{keyword}'")
+
     def notify_text(self, text: str) -> None:
         """Envia un mensaje de texto directo al chat de Telegram.
 
