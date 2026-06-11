@@ -105,37 +105,55 @@ class Monitor:
         Args:
             seen (dict[str, set[str]]): Historial acumulado de IDs vistos.
         """
+        # Obtenemos los ultimos 20 correos del buzon (independiente del keyword)
+        # Esto permite que el Fuzzy Matching procese correos que Gmail normalmente ignoraria
+        # por no tener la palabra exacta.
+        recent_messages = list(self._source.fetch(query="in:inbox", max_results=20))
+
+        # Asegurar inicializacion de sets en 'seen'
         for f in self._filters:
             kw = f.keyword
             if kw not in seen:
                 seen[kw] = set()
 
-            similar_batch = []
+        similar_batch = []
+        
+        for msg in recent_messages:
+            exact_kws = []
+            similar_kws = []
             
-            # Obtener nuevos mensajes desde la fuente.
-            for msg in self._source.fetch(query=kw, max_results=10):
-                if msg.id not in seen[kw]:
-                    match_type = f.matches(msg)
+            # Evaluar todos los filtros para este correo
+            for f in self._filters:
+                kw = f.keyword
+                # Solo procesar si el correo no ha sido notificado para esta keyword
+                if msg.id in seen[kw]:
+                    continue
                     
-                    if match_type == "EXACT":
-                        # Enviar notificacion individual
-                        for notifier in self._notifiers:
-                            try:
-                                notifier.send(keyword=kw, message=msg)
-                            except Exception as e:
-                                logger.error(f"Error al enviar notificacion exacta: {e}")
-                        seen[kw].add(msg.id)
-                        
-                    elif match_type == "SIMILAR":
-                        # Acumular para batching
-                        similar_batch.append(msg)
-                        seen[kw].add(msg.id)
-
-            # Si hay mensajes similares, enviar el lote
-            if similar_batch:
+                match_type = f.matches(msg)
+                if match_type == "EXACT":
+                    exact_kws.append(kw)
+                    seen[kw].add(msg.id)
+                elif match_type == "SIMILAR":
+                    similar_kws.append(kw)
+                    seen[kw].add(msg.id)
+            
+            if exact_kws:
+                # Si hay alguna coincidencia exacta, se manda el correo como Exacto.
+                # (Se ignora cualquier coincidencia similar que haya tenido el mismo correo).
                 for notifier in self._notifiers:
                     try:
-                        notifier.send_similar_batch(keyword=kw, messages=similar_batch)
+                        notifier.send(keywords=exact_kws, message=msg)
                     except Exception as e:
-                        logger.error(f"Error al enviar lote de similares: {e}")
+                        logger.error(f"Error al enviar notificacion exacta: {e}")
+            elif similar_kws:
+                # Si no hay exacta, pero si similares, se anade al batch de este ciclo.
+                similar_batch.append((msg, similar_kws))
+
+        # Al final del ciclo, si acumulamos correos similares, enviamos 1 batch.
+        if similar_batch:
+            for notifier in self._notifiers:
+                try:
+                    notifier.send_similar_batch(batch=similar_batch)
+                except Exception as e:
+                    logger.error(f"Error al enviar lote de similares: {e}")
 

@@ -13,11 +13,11 @@ class NotifierDecorator(Notifier, ABC):
     def __init__(self, wrapped: Notifier) -> None:
         self._wrapped = wrapped
 
-    def send(self, keyword: str, message: Message) -> None:
-        self._wrapped.send(keyword, message)
+    def send(self, keywords: list[str], message: Message) -> None:
+        self._wrapped.send(keywords, message)
 
-    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
-        self._wrapped.send_similar_batch(keyword, messages)
+    def send_similar_batch(self, batch: list[tuple[Message, list[str]]]) -> None:
+        self._wrapped.send_similar_batch(batch)
 
     def notify_text(self, text: str) -> None:
         self._wrapped.notify_text(text)

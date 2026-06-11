@@ -75,8 +75,6 @@ class GmailSource(Source):
         """
         # Sanitizar entrada del query eliminando caracteres sospechosos que alteren la consulta
         clean_query = re.sub(r'["\\]', '', query).strip()
-        if not clean_query:
-            return
 
         try:
             results = self._service.users().messages().list(

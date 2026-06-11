@@ -77,52 +77,50 @@ class TelegramNotifier(Notifier):
                     break
                 time.sleep(backoff * attempt)
 
-    def send(self, keyword: str, message: Message) -> None:
-        """Envia un mensaje formateado a Telegram notificando una coincidencia.
+    def send(self, keywords: list[str], message: Message) -> None:
+        """Envia un mensaje formateado a Telegram notificando coincidencias exactas.
 
         Args:
-            keyword (str): Palabra clave que origino la alerta.
+            keywords (list[str]): Palabras clave que originaron la alerta.
             message (Message): Datos del mensaje recibido.
         """
-        clean_keyword = self._sanitize_markdown(keyword)
+        clean_keywords = [self._sanitize_markdown(k) for k in keywords]
         clean_sender = self._sanitize_markdown(message.sender)
         clean_subject = self._sanitize_markdown(message.subject)
 
         text = (
             f"<b>[NUEVO CORREO]</b>\n"
-            f"<b>Keyword:</b> {clean_keyword}\n"
+            f"<b>Keywords:</b> {', '.join(clean_keywords)}\n"
             f"<b>De:</b> {clean_sender}\n"
             f"<b>Asunto:</b> {clean_subject}"
         )
         self._post_with_retry(text)
-        logger.info(f"Telegram enviado para keyword '{keyword}': {message.subject[:40]}")
+        logger.info(f"Telegram enviado para keywords '{', '.join(keywords)}': {message.subject[:40]}")
 
-    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
+    def send_similar_batch(self, batch: list[tuple[Message, list[str]]]) -> None:
         """Envia un mensaje agrupado con coincidencias similares a Telegram.
 
         Args:
-            keyword (str): Palabra clave buscada.
-            messages (list[Message]): Lista de mensajes similares detectados.
+            batch (list[tuple[Message, list[str]]]): Lista de correos y sus keywords similares.
         """
-        if not messages:
+        if not batch:
             return
             
-        clean_keyword = self._sanitize_markdown(keyword)
-        
         text_lines = [
             f"<b>[SIMILARES DETECTADOS]</b>",
-            f"<b>Keyword Original:</b> {clean_keyword}",
             ""
         ]
         
-        for msg in messages:
+        for msg, kws in batch:
+            clean_kws = [self._sanitize_markdown(k) for k in kws]
             clean_sender = self._sanitize_markdown(msg.sender)
             clean_subject = self._sanitize_markdown(msg.subject)
             text_lines.append(f"• De: {clean_sender} | Asunto: {clean_subject}")
+            text_lines.append(f"  Keywords: {', '.join(clean_kws)}")
             
         text = "\n".join(text_lines)
         self._post_with_retry(text)
-        logger.info(f"Telegram enviado lote de {len(messages)} mensajes similares para keyword '{keyword}'")
+        logger.info(f"Telegram enviado lote de {len(batch)} correos similares")
 
     def notify_text(self, text: str) -> None:
         """Envia un mensaje de texto directo al chat de Telegram.

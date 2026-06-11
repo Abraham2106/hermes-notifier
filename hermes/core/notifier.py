@@ -5,22 +5,21 @@ class Notifier(ABC):
     """Interfaz abstracta para el envio de notificaciones."""
 
     @abstractmethod
-    def send(self, keyword: str, message: Message) -> None:
-        """Envia una notificacion para un mensaje que coincidio con un criterio.
+    def send(self, keywords: list[str], message: Message) -> None:
+        """Envia una notificacion para un mensaje que coincidio con criterios exactos.
 
         Args:
-            keyword (str): Palabra clave que origino la alerta.
+            keywords (list[str]): Palabras clave que originaron la alerta.
             message (Message): Mensaje detectado.
         """
         pass
 
     @abstractmethod
-    def send_similar_batch(self, keyword: str, messages: list[Message]) -> None:
+    def send_similar_batch(self, batch: list[tuple[Message, list[str]]]) -> None:
         """Envia una notificacion agrupada para mensajes que coinciden de forma difusa.
 
         Args:
-            keyword (str): Palabra clave que origino la alerta.
-            messages (list[Message]): Lista de mensajes similares detectados.
+            batch (list[tuple[Message, list[str]]]): Lista de tuplas (Mensaje, Lista de Keywords).
         """
         pass
 
