@@ -1,0 +1,24 @@
+# Secretos — NUNCA subir a git
+.env
+seen_ids.json
+/data/
+
+# Credenciales OAuth descargadas de Google Cloud Console
+credentials.json
+token.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
