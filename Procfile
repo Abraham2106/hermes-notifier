@@ -1,1 +1,2 @@
-python gmail_monitor.py
+worker: python gmail_monitor.py
+
