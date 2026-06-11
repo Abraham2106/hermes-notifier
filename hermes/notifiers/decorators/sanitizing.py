@@ -22,12 +22,9 @@ class SanitizingNotifierDecorator(NotifierDecorator):
         """Sanitizes message fields before sending."""
         sanitized_msg = Message(
             id=message.id,
-            thread_id=message.thread_id,
-            subject=self._sanitize_string(message.subject),
             sender=self._sanitize_string(message.sender),
-            snippet=self._sanitize_string(message.snippet),
-            date=message.date,
-            url=message.url
+            subject=self._sanitize_string(message.subject),
+            body=self._sanitize_string(message.body)
         )
         self._wrapped.send(keyword, sanitized_msg)
 
